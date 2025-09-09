@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import Chatbot from "./pages/Chatbot";
 import Admin from "./pages/Admin";
 import Recommendations from "./pages/Recommendations";
+import Hybrid from "./pages/Hybrid";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
             </ProtectedRoute>
           } />
           <Route path="/crops-hybrid" element={<Layout><div className="p-8 text-center"><h1 className="text-2xl">Crops & Hybrids - Coming Soon</h1></div></Layout>} />
+          <Route path="/hybrid" element={<Layout><Hybrid /></Layout>} />
           <Route path="/support" element={<Layout><div className="p-8 text-center"><h1 className="text-2xl">Support & Community - Coming Soon</h1></div></Layout>} />
           
           {/* Legal pages */}

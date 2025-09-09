@@ -68,38 +68,6 @@ export function CTASection() {
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             
-            <Button
-              variant="outline"
-              size="xl"
-              onClick={() => navigate("/support")}
-              className="w-full sm:w-auto border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Learn More
-            </Button>
-          </div>
-
-          {/* App Download Section */}
-          <div className="text-primary-foreground/70 text-sm mb-6">
-            <p className="mb-4">Also available as mobile app for Android & iOS</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download for Android
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-              >
-                <Smartphone className="mr-2 h-4 w-4" />
-                Get iOS App
-              </Button>
-            </div>
           </div>
         </div>
 

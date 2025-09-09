@@ -18,7 +18,7 @@ import {
   ShoppingCart, 
   User, 
   Menu, 
-  
+  Sparkles,
   Leaf,
   TrendingUp,
   Users,
@@ -52,7 +52,8 @@ export function Header() {
     { name: "Home", path: "/", icon: Home },
     { name: "Diagnose", path: "/diagnose", icon: Camera },
     { name: "Marketplace", path: "/buy", icon: ShoppingCart },
-    { name: "Market Analysis", path: "/market-analysis", icon: TrendingUp },
+    { name: "Analysis", path: "/market-analysis", icon: TrendingUp },
+    { name: "Recommendation", path: "/recommendations", icon: Sparkles },
   ];
 
   const moreItems = [
