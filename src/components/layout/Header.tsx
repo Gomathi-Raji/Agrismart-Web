@@ -63,7 +63,7 @@ export function Header() {
 
   const resourcesItems = [
     { name: "Government Schemes", path: "/government-schemes", icon: Users },
-    { name: "Weather", path: "/weather", icon: Cloud },
+    { name: "community", path: "/community", icon: Cloud },
     { name: "Crops & Hybrids", path: "/hybrid", icon: Leaf },
     { name: "News & Blogs", path: "/blogs", icon: MessageCircle },
   ];
