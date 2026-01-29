@@ -33,7 +33,7 @@ export default function Recommendations() {
   const [soilType, setSoilType] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
-  const [geminiApiKey] = useState('AIzaSyBmlIUNvfTAacQ3K_wb7RDMwKF8Fo2XiaE'); // User-provided API key
+  const [openRouterApiKey] = useState(import.meta.env.VITE_OPENROUTER_API_KEY || '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'); // OpenRouter API key
   const { weatherData } = useWeather();
   const [showMapSelector, setShowMapSelector] = useState(false);
 
@@ -88,10 +88,10 @@ export default function Recommendations() {
       return;
     }
 
-    if (!geminiApiKey) {
+    if (!openRouterApiKey) {
       toast({
         title: "API key missing",
-        description: "Gemini API key is required",
+        description: "OpenRouter API key is required",
         variant: "destructive",
       });
       return;
@@ -101,30 +101,36 @@ export default function Recommendations() {
     try {
       // Fetch weather for the location if not current
       const weatherToUse = weatherData || await getWeatherForLocation(location);
-      
+
       const prompt = generateGeminiPrompt(location, weatherToUse, soilType);
-      
-      console.log('Attempting to fetch from Gemini API...');
-      
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+
+      console.log('Attempting to fetch from OpenRouter API...');
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${openRouterApiKey}`,
           'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Smart Agriculture App',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
+          model: "google/gemini-2.0-flash-001",
+          max_tokens: 2048,
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
         }),
       });
 
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Gemini API Error:', {
+        console.error('OpenRouter API Error:', {
           status: response.status,
           statusText: response.statusText,
           body: errorText
@@ -133,15 +139,15 @@ export default function Recommendations() {
       }
 
       const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      console.log('Gemini API Response:', data);
+      const aiResponse = data.choices?.[0]?.message?.content;
+
+      console.log('OpenRouter API Response:', data);
       console.log('AI Response Text:', aiResponse);
-      
+
       if (!aiResponse) {
-        throw new Error('No valid response from Gemini API');
+        throw new Error('No valid response from OpenRouter API');
       }
-      
+
       // Parse AI response and structure it
       const parsed = parseAIResponse(aiResponse, location);
       setRecommendations(parsed);

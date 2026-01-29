@@ -18,7 +18,7 @@ export default function Diagnose() {
   const [badges, setBadges] = useState<string[]>([]);
   const [savedDiagnoses, setSavedDiagnoses] = useState<any[]>([]);
 
-  const GEMINI_API_KEY = "AIzaSyDGEgEm0g2i94bulu5Mf32yRNEhRLE3RNU";
+  const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "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";
 
   const productRecommendations = [
     {
@@ -85,16 +85,24 @@ export default function Diagnose() {
 
   const analyzeImageWithGemini = async (imageBase64: string) => {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Smart Agriculture App',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                text: `As an expert agricultural AI, analyze this plant/leaf image in detail. Provide a comprehensive analysis in JSON format with the following structure:
+          model: "google/gemini-2.0-flash-001",
+          max_tokens: 2048,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `As an expert agricultural AI, analyze this plant/leaf image in detail. Provide a comprehensive analysis in JSON format with the following structure:
 
 {
   "status": "healthy" or "diseased",
@@ -134,25 +142,32 @@ export default function Diagnose() {
 }
 
 Be detailed and practical. Focus on actionable advice that farmers can implement.`
-              },
-              {
-                inline_data: {
-                  mime_type: "image/jpeg",
-                  data: imageBase64.split(',')[1]
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: imageBase64
+                  }
                 }
-              }
-            ]
-          }]
+              ]
+            }
+          ]
         })
       });
 
       const data = await response.json();
-      
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        throw new Error('Invalid response from Gemini API');
+
+      if (!response.ok) {
+        console.error('OpenRouter API Error Response:', data);
+        throw new Error(data.error?.message || `API Error: ${response.status}`);
       }
 
-      const analysisText = data.candidates[0].content.parts[0].text;
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('Invalid response structure:', data);
+        throw new Error('Invalid response from OpenRouter API');
+      }
+
+      const analysisText = data.choices[0].message.content;
       
       // Clean up the response text (remove markdown formatting if present)
       const cleanedText = analysisText.replace(/```json\n?|\n?```/g, '').trim();
@@ -230,7 +245,7 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
         };
       }
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error('OpenRouter API error:', error);
       
       // Return comprehensive fallback data
       return {

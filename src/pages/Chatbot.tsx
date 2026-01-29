@@ -19,14 +19,14 @@ export default function Chatbot() {
   const [autoPlay, setAutoPlay] = useState(true);
   const controllerRef = useRef<AbortController | null>(null);
   const recognitionRef = useRef<WebkitSpeechRecognition | null>(null);
-  const [geminiApiKey, setGeminiApiKey] = useState<string>("");
+  const [openRouterApiKey, setOpenRouterApiKey] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Load API key from env or localStorage
-    const fromEnv = (import.meta as any)?.env?.VITE_GEMINI_API_KEY || "";
-    const fromStorage = typeof window !== "undefined" ? window.localStorage.getItem("GEMINI_API_KEY") || "" : "";
-    setGeminiApiKey(fromEnv || fromStorage || "");
+    const fromEnv = (import.meta as any)?.env?.VITE_OPENROUTER_API_KEY || "";
+    const fromStorage = typeof window !== "undefined" ? window.localStorage.getItem("OPENROUTER_API_KEY") || "" : "";
+    setOpenRouterApiKey(fromEnv || fromStorage || "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");
 
     // Initialize speech synthesis and load voices
     const loadVoices = () => {
@@ -174,7 +174,7 @@ export default function Chatbot() {
 
   const sendToGemini = async (text: string) => {
     if (!text.trim()) return;
-      if (!geminiApiKey) {
+      if (!openRouterApiKey) {
       const errorMsg = { role: "assistant" as const, content: "ஓ! எனக்கு API key வேண்டும். அதை கொடுத்து என்னை உயிர்ப்பிக்கவும்! 🌱" };
       setMessages(prev => [...prev, errorMsg]);
       if (autoPlay) speakTamil(errorMsg.content);
@@ -196,31 +196,33 @@ export default function Chatbot() {
 
       // Build conversation context for better responses
       const conversationHistory = messages.slice(-4).map(m => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.content }]
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content
       }));
-      
-      const currentMessage = { role: "user", parts: [{ text: userMsg }] };
+
       const fullConversation = [
-        { role: "user", parts: [{ text: systemPrompt }] },
-        { role: "model", parts: [{ text: "வணக்கம்! நான் ஃப்ளோரா. உங்கள் தாவர நண்பன்!" }] },
+        { role: "system", content: systemPrompt },
+        { role: "assistant", content: "வணக்கம்! நான் ஃப்ளோரா. உங்கள் தாவர நண்பன்!" },
         ...conversationHistory,
-        currentMessage
+        { role: "user", content: userMsg }
       ];
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+        'https://openrouter.ai/api/v1/chat/completions',
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Authorization": `Bearer ${openRouterApiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": window.location.origin,
+            "X-Title": "Smart Agriculture App"
+          },
           body: JSON.stringify({
-            contents: fullConversation,
-            generationConfig: {
-              temperature: 0.8,
-              topK: 30,
-              topP: 0.9,
-              maxOutputTokens: 512,
-            }
+            model: "google/gemini-2.0-flash-001",
+            messages: fullConversation,
+            temperature: 0.8,
+            top_p: 0.9,
+            max_tokens: 512,
           }),
           signal: controllerRef.current.signal,
         }
@@ -231,7 +233,7 @@ export default function Chatbot() {
       }
 
       const data = await res.json();
-      const aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || 
+      const aiResponse = data?.choices?.[0]?.message?.content ||
         "ஓ! என்னால் இப்போது பதில் சொல்ல முடியவில்லை. மீண்டும் கேளுங்கள்!";
       
       const cleaned = cleanResponse(aiResponse);
@@ -251,7 +253,7 @@ export default function Chatbot() {
       }, 100);
 
     } catch (err) {
-      console.error('Gemini API error:', err);
+      console.error('OpenRouter API error:', err);
       const errorMsg = { role: "assistant" as const, content: "அய்யோ! எனக்கு கொஞ்சம் பிரச்சனை. சில நிமிடம் கழித்து மீண்டும் பேசலாம்!" };
       setMessages(prev => prev.filter(m => !m.isStreaming).concat(errorMsg));
       if (autoPlay) speakTamil(errorMsg.content);
@@ -346,23 +348,23 @@ export default function Chatbot() {
         <div className="pointer-events-auto w-full max-w-2xl">
           <div className="rounded-2xl border border-border bg-background/80 backdrop-blur-md shadow-xl">
             {/* API Key setup if missing */}
-            {!geminiApiKey && (
+            {!openRouterApiKey && (
               <div className="border-b border-border p-3 flex items-center gap-2 bg-gradient-to-r from-green-50 to-blue-50">
                 <div className="text-2xl">🌱</div>
                 <div className="flex-1">
                   <input
-                    placeholder="Gemini API Key ஐ இங்கே பேஸ்ட் செய்யுங்கள்"
+                    placeholder="OpenRouter API Key ஐ இங்கே பேஸ்ட் செய்யுங்கள்"
                     type="password"
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    onChange={(e) => setOpenRouterApiKey(e.target.value)}
                   />
                   <div className="text-xs text-muted-foreground mt-1">என்னை உயிர்ப்பிக்க API key வேண்டும்!</div>
                 </div>
                 <Button
                   type="button"
                   onClick={() => {
-                    if (geminiApiKey) {
-                      window.localStorage.setItem("GEMINI_API_KEY", geminiApiKey);
+                    if (openRouterApiKey) {
+                      window.localStorage.setItem("OPENROUTER_API_KEY", openRouterApiKey);
                     }
                   }}
                   className="bg-green-600 hover:bg-green-700"
@@ -434,7 +436,7 @@ export default function Chatbot() {
               <Button
                 type="button"
                 onClick={handleSend}
-                disabled={!input.trim() || !geminiApiKey || isLoading}
+                disabled={!input.trim() || !openRouterApiKey || isLoading}
                 className="min-w-[80px]"
               >
                 {isLoading ? (
