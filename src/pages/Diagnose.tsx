@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Camera, Upload, Scan, AlertCircle, CheckCircle, 
   Award, Share2, Bookmark, ShoppingCart, Star, 
-  Leaf, Sparkles, TrendingUp, Heart, Shield, Calendar
+  Leaf, Sparkles, TrendingUp, Heart, Shield, Calendar, Download
 } from "lucide-react";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import diseaseImage from "@/assets/crop-disease-detection.jpg";
 
 export default function Diagnose() {
@@ -19,6 +21,344 @@ export default function Diagnose() {
   const [savedDiagnoses, setSavedDiagnoses] = useState<any[]>([]);
 
   const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || "";
+
+  const generatePDFReport = async () => {
+    if (!analysisResult || !selectedImage) return;
+
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+
+      // Header with logo and title
+      pdf.setFillColor(34, 197, 94); // Green color
+      pdf.rect(0, 0, pageWidth, 30, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Smart Agriculture', 20, 20);
+      
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('AI Plant Health Diagnosis Report', 20, 28);
+
+      yPosition = 45;
+
+      // Report metadata
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Report Generated:', 20, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(), 60, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Analysis Confidence:', 20, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${analysisResult.confidence}%`, 60, yPosition);
+
+      yPosition += 20;
+
+      // Plant Image
+      if (selectedImage) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // Handle CORS issues
+        img.src = selectedImage;
+        
+        // Create a canvas to resize the image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 200;
+        canvas.height = 150;
+        
+        img.onload = () => {
+          ctx?.drawImage(img, 0, 0, 200, 150);
+          const resizedImage = canvas.toDataURL('image/jpeg', 0.8);
+          
+          pdf.addImage(resizedImage, 'JPEG', 20, yPosition, 60, 45);
+          
+          // Plant Information Box
+          pdf.setFillColor(240, 240, 240);
+          pdf.rect(90, yPosition, 100, 45, 'F');
+          
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(34, 197, 94);
+          pdf.text('Plant Analysis', 95, yPosition + 8);
+          
+          pdf.setFontSize(11);
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Plant Type:', 95, yPosition + 18);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(analysisResult.plantType || 'Unknown', 125, yPosition + 18);
+          
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Status:', 95, yPosition + 26);
+          pdf.setFont('helvetica', 'normal');
+          const statusColor = analysisResult.status === 'healthy' ? [34, 197, 94] : [239, 68, 68];
+          pdf.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+          pdf.text(analysisResult.status?.toUpperCase() || 'UNKNOWN', 125, yPosition + 26);
+          
+          if (analysisResult.disease) {
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Disease:', 95, yPosition + 34);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(239, 68, 68);
+            pdf.text(analysisResult.disease, 125, yPosition + 34);
+          }
+          
+          if (analysisResult.severity) {
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Severity:', 95, yPosition + 42);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(245, 158, 11);
+            pdf.text(analysisResult.severity, 125, yPosition + 42);
+          }
+          
+          continuePDFGeneration(pdf, yPosition + 55);
+        };
+        
+        // If image fails to load, continue without it
+        img.onerror = () => {
+          console.warn('Failed to load image for PDF, continuing without image');
+          continuePDFGeneration(pdf, yPosition);
+        };
+        
+        // Timeout for image loading (5 seconds)
+        setTimeout(() => {
+          if (!img.complete) {
+            console.warn('Image loading timeout, continuing without image');
+            continuePDFGeneration(pdf, yPosition);
+          }
+        }, 5000);
+      } else {
+        continuePDFGeneration(pdf, yPosition);
+      }
+
+      function continuePDFGeneration(pdf: jsPDF, startY: number) {
+        let currentY = startY;
+
+        // Symptoms Section
+        if (analysisResult.symptoms && analysisResult.symptoms.length > 0) {
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(254, 243, 199);
+          pdf.rect(20, currentY, pageWidth - 40, 8, 'F');
+          pdf.text('Symptoms Identified', 25, currentY + 6);
+          
+          currentY += 12;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          
+          analysisResult.symptoms.forEach((symptom: string, index: number) => {
+            if (currentY > pageHeight - 20) {
+              pdf.addPage();
+              currentY = 20;
+            }
+            pdf.text(`• ${symptom}`, 25, currentY);
+            currentY += 5;
+          });
+          
+          currentY += 5;
+        }
+
+        // Immediate Actions
+        if (analysisResult.immediateActions && analysisResult.immediateActions.length > 0) {
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(254, 226, 226);
+          pdf.rect(20, currentY, pageWidth - 40, 8, 'F');
+          pdf.text('Immediate Actions Required', 25, currentY + 6);
+          
+          currentY += 12;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          
+          analysisResult.immediateActions.forEach((action: string, index: number) => {
+            if (currentY > pageHeight - 20) {
+              pdf.addPage();
+              currentY = 20;
+            }
+            pdf.text(`• ${action}`, 25, currentY);
+            currentY += 5;
+          });
+          
+          currentY += 5;
+        }
+
+        // Treatment Section
+        if (analysisResult.detailedTreatment) {
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(220, 252, 231);
+          pdf.rect(20, currentY, pageWidth - 40, 8, 'F');
+          pdf.text('Recommended Treatment', 25, currentY + 6);
+          
+          currentY += 12;
+          pdf.setFontSize(10);
+          
+          if (analysisResult.detailedTreatment.organicSolutions && analysisResult.detailedTreatment.organicSolutions.length > 0) {
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Organic Solutions:', 25, currentY);
+            currentY += 6;
+            pdf.setFont('helvetica', 'normal');
+            
+            analysisResult.detailedTreatment.organicSolutions.forEach((solution: string) => {
+              if (currentY > pageHeight - 20) {
+                pdf.addPage();
+                currentY = 20;
+              }
+              pdf.text(`• ${solution}`, 30, currentY);
+              currentY += 5;
+            });
+            currentY += 3;
+          }
+          
+          if (analysisResult.detailedTreatment.chemicalSolutions && analysisResult.detailedTreatment.chemicalSolutions.length > 0) {
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Chemical Solutions:', 25, currentY);
+            currentY += 6;
+            pdf.setFont('helvetica', 'normal');
+            
+            analysisResult.detailedTreatment.chemicalSolutions.forEach((solution: string) => {
+              if (currentY > pageHeight - 20) {
+                pdf.addPage();
+                currentY = 20;
+              }
+              pdf.text(`• ${solution}`, 30, currentY);
+              currentY += 5;
+            });
+            currentY += 3;
+          }
+          
+          currentY += 5;
+        }
+
+        // Fertilizers
+        if (analysisResult.fertilizers && analysisResult.fertilizers.length > 0) {
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(240, 249, 255);
+          pdf.rect(20, currentY, pageWidth - 40, 8, 'F');
+          pdf.text('Recommended Fertilizers', 25, currentY + 6);
+          
+          currentY += 12;
+          pdf.setFontSize(10);
+          
+          analysisResult.fertilizers.forEach((fertilizer: any) => {
+            if (currentY > pageHeight - 30) {
+              pdf.addPage();
+              currentY = 20;
+            }
+            
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(fertilizer.name, 25, currentY);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Type: ${fertilizer.type}`, 25, currentY + 5);
+            pdf.text(`Application: ${fertilizer.application}`, 25, currentY + 10);
+            pdf.text(`Timing: ${fertilizer.timing}`, 25, currentY + 15);
+            
+            currentY += 20;
+          });
+          
+          currentY += 5;
+        }
+
+        // Prevention Tips
+        if (analysisResult.preventionTips && analysisResult.preventionTips.length > 0) {
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(250, 245, 255);
+          pdf.rect(20, currentY, pageWidth - 40, 8, 'F');
+          pdf.text('Prevention Tips', 25, currentY + 6);
+          
+          currentY += 12;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          
+          analysisResult.preventionTips.forEach((tip: string) => {
+            if (currentY > pageHeight - 20) {
+              pdf.addPage();
+              currentY = 20;
+            }
+            pdf.text(`• ${tip}`, 25, currentY);
+            currentY += 5;
+          });
+          
+          currentY += 5;
+        }
+
+        // Growth Tips
+        if (analysisResult.growthTips && analysisResult.growthTips.length > 0) {
+          pdf.setFontSize(14);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFillColor(255, 251, 235);
+          pdf.rect(20, currentY, pageWidth - 40, 8, 'F');
+          pdf.text('Growth Tips', 25, currentY + 6);
+          
+          currentY += 12;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'normal');
+          
+          analysisResult.growthTips.forEach((tip: string) => {
+            if (currentY > pageHeight - 20) {
+              pdf.addPage();
+              currentY = 20;
+            }
+            pdf.text(`• ${tip}`, 25, currentY);
+            currentY += 5;
+          });
+          
+          currentY += 5;
+        }
+
+        // Appreciation Message
+        if (analysisResult.appreciation) {
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'italic');
+          pdf.setTextColor(34, 197, 94);
+          
+          // Word wrap the appreciation message
+          const splitAppreciation = pdf.splitTextToSize(analysisResult.appreciation, pageWidth - 40);
+          let appreciationY = currentY;
+          
+          splitAppreciation.forEach((line: string) => {
+            if (appreciationY > pageHeight - 20) {
+              pdf.addPage();
+              appreciationY = 20;
+            }
+            pdf.text(line, 25, appreciationY);
+            appreciationY += 5;
+          });
+          
+          currentY = appreciationY + 10;
+        }
+
+        // Footer
+        const totalPages = pdf.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(8);
+          pdf.setTextColor(128, 128, 128);
+          pdf.text(`Generated by Smart Agriculture AI Lab - Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        }
+
+        // Save the PDF
+        const fileName = `plant-diagnosis-${analysisResult.plantType?.replace(/\s+/g, '-').toLowerCase() || 'unknown'}-${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(fileName);
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF report. Please try again.');
+    }
+  };
 
   const productRecommendations = [
     {
@@ -453,6 +793,105 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
           )}
         </AnimatePresence>
 
+        {/* Step-by-Step Instructions */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="shadow-elegant border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                How to Use AI Plant Diagnosis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Step 1 */}
+                <motion.div
+                  className="text-center space-y-3"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                    <Camera className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Step 1</h4>
+                    <p className="text-xs text-muted-foreground">Take a clear photo of your plant, focusing on leaves, stems, or fruits</p>
+                  </div>
+                </motion.div>
+
+                {/* Step 2 */}
+                <motion.div
+                  className="text-center space-y-3"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
+                    <Upload className="h-8 w-8 text-success" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Step 2</h4>
+                    <p className="text-xs text-muted-foreground">Upload your image by dragging & dropping or clicking to browse</p>
+                  </div>
+                </motion.div>
+
+                {/* Step 3 */}
+                <motion.div
+                  className="text-center space-y-3"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center mx-auto">
+                    <Scan className="h-8 w-8 text-warning" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Step 3</h4>
+                    <p className="text-xs text-muted-foreground">Click "Analyze Plant Health" and wait for AI analysis (10-15 seconds)</p>
+                  </div>
+                </motion.div>
+
+                {/* Step 4 */}
+                <motion.div
+                  className="text-center space-y-3"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-16 h-16 bg-info/10 rounded-full flex items-center justify-center mx-auto">
+                    <Download className="h-8 w-8 text-info" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">Step 4</h4>
+                    <p className="text-xs text-muted-foreground">Review results and download PDF report for your records</p>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Tips Section */}
+              <div className="mt-6 p-4 bg-accent/20 rounded-lg">
+                <h5 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-primary" />
+                  Pro Tips for Best Results
+                </h5>
+                <div className="grid md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+                  <div className="space-y-1">
+                    <p>• 📸 Use good lighting - natural daylight works best</p>
+                    <p>• 🔍 Focus on affected areas for disease detection</p>
+                    <p>• 📏 Keep camera steady for clear images</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p>• 🌱 Include both healthy and unhealthy parts</p>
+                    <p>• 🚫 Avoid blurry or dark photos</p>
+                    <p>• 💡 Clean lens for better image quality</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Upload Section with Leaf Shape */}
         <motion.div
           initial={{ y: 50, opacity: 0 }}
@@ -467,6 +906,21 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Quick Tips in Upload Card */}
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Camera className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="text-sm">
+                    <p className="font-medium text-primary mb-1">📸 Best Photo Tips</p>
+                    <p className="text-muted-foreground">
+                      Take clear, well-lit photos of leaves, stems, or fruits. Include both healthy and affected areas for accurate diagnosis.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Leaf-shaped Upload Area */}
               <motion.div
                 className={`relative border-2 border-dashed rounded-[40px] p-8 text-center transition-all duration-300 ${
@@ -490,16 +944,36 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
                       alt="Selected plant"
                       className="max-w-sm mx-auto rounded-lg shadow-md"
                     />
-                    <Button
-                      onClick={() => {
-                        setSelectedImage(null);
-                        setAnalysisResult(null);
-                      }}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Remove Image
-                    </Button>
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setAnalysisResult(null);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Remove Image
+                      </Button>
+                      <Button
+                        onClick={analyzeImage}
+                        disabled={isAnalyzing}
+                        variant="hero"
+                        size="sm"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <Scan className="mr-2 h-4 w-4 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Analyze Now
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </motion.div>
                 ) : (
                   <div className="space-y-4">
@@ -514,7 +988,10 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
                     </motion.div>
                     <div>
                       <p className="text-lg font-medium">Drop your plant image here</p>
-                      <p className="text-muted-foreground">or click to browse</p>
+                      <p className="text-muted-foreground">or click to browse files</p>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        <p>Supported formats: JPG, PNG, WebP • Max size: 10MB</p>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -527,33 +1004,32 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
                 />
               </motion.div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  onClick={analyzeImage}
-                  disabled={!selectedImage || isAnalyzing}
-                  variant="hero"
-                  size="lg"
-                  className="flex-1"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Scan className="mr-2 h-5 w-5" />
-                      </motion.div>
-                      Analyzing image...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Analyze Plant Health
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* Action Buttons - Only show when no image selected */}
+              {!selectedImage && (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    onClick={() => document.querySelector('input[type="file"]')?.click()}
+                    variant="outline"
+                    size="lg"
+                    className="flex-1"
+                  >
+                    <Upload className="mr-2 h-5 w-5" />
+                    Choose File
+                  </Button>
+                  <Button
+                    variant="hero"
+                    size="lg"
+                    className="flex-1"
+                    onClick={() => {
+                      // Could add camera access here in the future
+                      alert('Camera access coming soon! For now, please upload an image file.');
+                    }}
+                  >
+                    <Camera className="mr-2 h-5 w-5" />
+                    Take Photo
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -608,6 +1084,10 @@ Be detailed and practical. Focus on actionable advice that farmers can implement
                       <Button variant="outline" size="sm">
                         <Share2 className="h-4 w-4 mr-1" />
                         Share
+                      </Button>
+                      <Button onClick={generatePDFReport} variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-1" />
+                        Download PDF
                       </Button>
                     </div>
                   )}
