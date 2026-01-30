@@ -25,7 +25,7 @@ export function FAQSection() {
     },
     {
       question: "Is AgriSmart available in my local language?",
-      answer: "Yes! AgriSmart supports 15+ Indian languages including Hindi, Tamil, Telugu, Marathi, Gujarati, Punjabi, Bengali, Kannada, Malayalam, and more. All features including voice commands and text are available in your preferred language."
+      answer: "Yes! AgriSmart supports 15+ Indian languages including Hindi, Tamil, Telugu, Marathi, Gujarati, Tamil Nadui, Bengali, Kannada, Malayalam, and more. All features including voice commands and text are available in your preferred language."
     },
     {
       question: "How does the pricing work? Are there any hidden costs?",

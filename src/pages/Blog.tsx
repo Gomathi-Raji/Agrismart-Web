@@ -53,7 +53,7 @@ export default function Blog() {
       id: 2,
       title: "Wheat Prices Surge 15% This Month: What Farmers Need to Know",
       excerpt: "Market analysis reveals key factors driving wheat prices up. Expert insights on when to sell for maximum profits.",
-      author: "Rajesh Kumar",
+      author: "Sandhiya",
       publishDate: "March 12, 2024",
       readTime: "5 min read",
       category: "Market Trends",

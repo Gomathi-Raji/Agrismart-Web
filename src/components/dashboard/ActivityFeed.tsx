@@ -135,7 +135,7 @@ export function ActivityFeed({ userType = "farmer", limit = 5 }: ActivityFeedPro
       id: "1",
       type: "user",
       title: "New User Registration",
-      description: "Farmer from Punjab registered and verified",
+      description: "Farmer from Tamil Nadu registered and verified",
       timestamp: "15 minutes ago",
       status: "success",
       priority: "low"

@@ -112,8 +112,8 @@ const helpResources = [
 
 const testimonials = [
   {
-    name: "Rajesh Kumar",
-    location: "Punjab",
+    name: "Sandhiya",
+    location: "Tamil Nadu",
     rating: 5,
     text: "The support team helped me understand the AI diagnosis feature. Very knowledgeable and patient!",
     date: "2 days ago"

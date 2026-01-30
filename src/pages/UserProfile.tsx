@@ -25,11 +25,11 @@ import {
 
 export default function UserProfile() {
   const farmerData = {
-    name: "Rajesh Kumar",
-    location: "Village Rampur, Punjab",
+    name: "Sandhiya",
+    location: "Chennai, Tamil Nadu",
     phone: "+91 98765 43210",
-    email: "rajesh.farmer@gmail.com",
-    joinDate: "March 2023",
+    email: "sandhiya.farmer@gmail.com",
+    joinDate: "March 2026",
     farmSize: "15 acres",
     crops: ["Wheat", "Rice", "Sugarcane"],
     experience: "12 years",

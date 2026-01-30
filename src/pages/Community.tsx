@@ -68,8 +68,8 @@ const mockPosts = [
     title: "My tomato plants have yellow leaves - what could be the problem?",
     content: "I've been growing tomatoes for 3 months now, and recently the leaves are turning yellow from the bottom. The plants are getting enough water. What could be causing this?",
     author: {
-      name: "Rajesh Kumar",
-      location: "Punjab",
+      name: "Sandhiya",
+      location: "Tamil Nadu",
       avatar: farmerAvatar3,
       badge: "Experienced Farmer",
       reputation: 234
@@ -255,8 +255,8 @@ const topContributors = [
     solutions: 34
   },
   {
-    name: "Rajesh Kumar",
-    location: "Punjab", 
+    name: "Sandhiya",
+    location: "Tamil Nadu", 
     avatar: farmerAvatar3,
     badge: "Experienced Farmer",
     reputation: 234,

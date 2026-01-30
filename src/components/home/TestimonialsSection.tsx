@@ -11,8 +11,8 @@ import lakshmiDeviAvatar from "@/assets/lakshmi-devi-avatar.jpg";
 export function TestimonialsSection() {
   const testimonials = [
     {
-      name: "Rajesh Kumar",
-      location: "Punjab",
+      name: "Sandhiya",
+      location: "Tamil Nadu",
       crop: "Wheat & Rice Farmer",
       rating: 5,
       quote: "AgriSmart helped me detect wheat rust disease early and saved 80% of my crop. The AI is incredibly accurate and the treatment suggestions worked perfectly!",

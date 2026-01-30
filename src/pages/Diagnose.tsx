@@ -303,54 +303,27 @@ export default function Diagnose() {
       name: "Bonide Neem Oil Fungicide",
       price: "$19.99",
       rating: 4.5,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop&crop=center",
+      image: "https://m.media-amazon.com/images/I/71jF-TqBhsL._SL1500_.jpg",
       description: "Natural fungicide and insecticide for plants - 32 oz",
-      affiliateLink: "https://www.amazon.com/Bonide-811-Copper-Fungicide-16/dp/B00004R9VZ"
+      affiliateLink: "https://www.amazon.com/Bonide-BND022-Pesticide-Organic-Gardening/dp/B007CRG4CW?th=1"
     },
     {
       id: 2,
       name: "Bonide Liquid Copper Fungicide",
       price: "$24.97",
       rating: 4.4,
-      image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=200&fit=crop&crop=center",
+      image: "https://m.media-amazon.com/images/I/716BOXqvOTL._AC_SL1500_.jpg",
       description: "Controls fungal diseases on vegetables and fruits - 32 oz",
-      affiliateLink: "https://www.amazon.com/Bonide-Liquid-Copper-Fungicide-16/dp/B000H9B7B0"
+      affiliateLink: "https://www.amazon.com/Bonide-811-Copper-Fungicide-473ML/dp/B00BSULSHA?th=1"
     },
     {
       id: 3,
-      name: "Miracle-Gro All Purpose Plant Food",
-      price: "$16.99",
-      rating: 4.6,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop&crop=center",
-      description: "Water soluble all-purpose plant food - 5 lbs",
-      affiliateLink: "https://www.amazon.com/Miracle-Gro-Water-Soluble-All-Purpose-Plant/dp/B00004R9VZ"
-    },
-    {
-      id: 4,
-      name: "Safer Brand Insecticidal Soap",
-      price: "$12.99",
-      rating: 4.3,
-      image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=200&fit=crop&crop=center",
-      description: "Organic insect control for plants - 32 oz concentrate",
-      affiliateLink: "https://www.amazon.com/Safer-Brand-Insecticidal-Soap-Concentrate/dp/B00004R9VZ"
-    },
-    {
-      id: 5,
-      name: "Epsom Salt Magnesium Sulfate",
-      price: "$8.99",
-      rating: 4.7,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop&crop=center",
-      description: "Natural magnesium and sulfur fertilizer - 5 lbs",
-      affiliateLink: "https://www.amazon.com/Epsom-Salt-Magnesium-Sulfate-Fertilizer/dp/B07Z8Z8Z8Z"
-    },
-    {
-      id: 6,
       name: "Bonide Fruit Tree Spray",
       price: "$34.99",
       rating: 4.5,
-      image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=300&h=200&fit=crop&crop=center",
+      image: "https://m.media-amazon.com/images/I/51jFWOZN85L._SL1000_.jpg",
       description: "Complete garden disease control kit - 32 oz",
-      affiliateLink: "https://www.amazon.com/Bonide-Complete-Garden-Disease-Control/dp/B00004R9VZ"
+      affiliateLink: "https://www.amazon.com/Bonide-811-Copper-Fungicide-473ML/dp/B00BSULSHA?th=1"
     }
   ];
 
